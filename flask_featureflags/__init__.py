@@ -146,6 +146,28 @@ class FeatureFlag(object):
 
     return False
 
+  def get_flags(self):
+    """ Loop through config variables and return a dictionary of flags.  """
+    flags = {}
+
+    for config_var in current_app.config.keys():
+      #check that key starts with our config variable
+      if config_var.startswith("{}".format(FEATURE_FLAGS_CONFIG)):
+
+        # If the key is inline
+        if config_var.startswith("{}_".format(FEATURE_FLAGS_CONFIG)):
+          flags[config_var] = self.check(
+            config_var[len(FEATURE_FLAGS_CONFIG) + 1:]
+            )
+
+        #if it's a dictionary and it already passed the first check
+        elif isinstance(current_app.config[config_var], dict):
+          flags[config_var] = {}
+          for key in current_app.config[config_var].keys():
+            flags[config_var][key] = self.check(key)
+
+    return flags
+
 
 def is_active(feature):
   """ Check if a feature is active """
